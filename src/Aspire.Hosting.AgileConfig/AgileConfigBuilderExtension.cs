@@ -1,17 +1,17 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using IdentityModel.Client;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Aspire.Hosting.AgileConfig
 {
@@ -76,7 +76,10 @@ namespace Aspire.Hosting.AgileConfig
                     var http = e.Services.GetService<IHttpClientFactory>();
                     var httpclient = http.CreateClient();
                     httpclient.BaseAddress = new Uri(resource.PrimaryEndpoint.Url);
-                    httpclient.SetBasicAuthentication("admin", resource.Option.saPassword);
+                    //httpclient.SetBasicAuthentication("admin", resource.Option.saPassword);
+                    //aspire 升9.3.0 没有引用 IdentityModel.Client 包，所以不能使用 SetBasicAuthentication 方法
+                    var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"admin:{resource.Option.saPassword}"));
+                    httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
                     using StringContent jsonContent = new(
                         JsonSerializer.Serialize(new
                         {
